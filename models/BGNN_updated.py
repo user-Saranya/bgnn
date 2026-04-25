@@ -16,12 +16,12 @@ class BGNN_NDT(BaseModel):
                  lr=0.01,
                  hidden_dim=64,
                  dropout=0.,
-                 name='gat',
+                 name='sage',
                  use_leaderboard=False,
                  num_trees=5,
                  tree_depth=3):
 
-        super(BaseModel, self).__init__()
+        super().__init__()
 
         self.learning_rate = lr
         self.hidden_dim = hidden_dim
