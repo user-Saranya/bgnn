@@ -6,6 +6,7 @@ from bgnn.models.GBDT import GBDTCatBoost, GBDTLGBM
 from bgnn.models.MLP import MLP
 from bgnn.models.GNN import GNN
 from bgnn.models.BGNN import BGNN
+from bgnn.models.BGNN_updated import BGNN_NDT
 from bgnn.scripts.utils import NpEncoder
 
 import os
@@ -112,7 +113,7 @@ class RunModel:
 
                 inputs = {'X': self.X, 'y': self.y, 'train_mask': self.train_mask,
                           'val_mask': self.val_mask, 'test_mask': self.test_mask, 'cat_features': self.cat_features}
-                if model_name in ['gnn', 'resgnn', 'bgnn']:
+                if model_name in ['gnn', 'resgnn', 'bgnn', 'bgnn_ndt']:
                     inputs['networkx_graph'] = self.networkx_graph
 
                 metrics = model.fit(num_epochs=self.config.num_epochs, patience=self.config.patience,
@@ -148,6 +149,8 @@ class RunModel:
             return GNN(task=self.task, gbdt_predictions=gbdt.model.predict(self.X), **ps)
         elif model_name == 'bgnn':
             return BGNN(self.task, **ps)
+        elif model_name == 'bgnn_ndt':
+            return BGNN_NDT(self.task, **ps)
 
     def create_save_folder(self, seed):
         self.seed_folder = f'{self.save_folder}/{seed}'
@@ -184,7 +187,7 @@ class RunModel:
         return 'unknown'
 
     def aggregate_results(self):
-        algos = ['catboost', 'lightgbm', 'mlp', 'gnn', 'resgnn', 'bgnn']
+        algos = ['catboost', 'lightgbm', 'mlp', 'gnn', 'resgnn', 'bgnn', 'bgnn_ndt']
         model_best_score = ddict(list)
         model_best_time = ddict(list)
 
@@ -251,6 +254,7 @@ class RunModel:
                     self.run_one_model(config_fn=config_dir / 'gnn.yaml', model_name="gnn")
                     self.run_one_model(config_fn=config_dir / 'resgnn.yaml', model_name="resgnn")
                     self.run_one_model(config_fn=config_dir / 'bgnn.yaml', model_name="bgnn")
+                    self.run_one_model(config_fn=config_dir / 'bgnn_ndt.yaml', model_name="bgnn_ndt")
                     break
                 elif arg == 'catboost':
                     self.run_one_model(config_fn=config_dir / 'catboost.yaml', model_name="catboost")
