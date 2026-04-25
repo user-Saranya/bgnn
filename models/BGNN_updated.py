@@ -3,7 +3,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
-from .GNN import GNNModelDGL, GATDGL
+from .gnn_graphSAGE import GNNModelDGL, GATDGL
 from .Base import BaseModel
 from .ndt import NeuralDecisionForest
 from tqdm import tqdm
