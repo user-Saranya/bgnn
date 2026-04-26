@@ -160,8 +160,9 @@ class GNNModelDGL(torch.nn.Module):
                        ReLU(), Dropout(p=dropout), Linear(hidden_dim, out_dim))
             self.l1 = APPNPConv(k=10, alpha=0.1, edge_drop=0.)
         elif name == 'sage':
-            self.l1 = SAGEConv(in_dim, hidden_dim, aggregator_type='mean')
-            self.l2 = SAGEConv(hidden_dim, out_dim, aggregator_type='mean')
+            self.l1 = SAGEConv(in_dim, hidden_dim, aggregator_type='pool')
+            self.l2 = SAGEConv(hidden_dim, out_dim, aggregator_type='pool')
+            self.l3 = SAGEConv(hidden_dim, out_dim, aggregator_type='pool')
             self.drop = Dropout(p=dropout)
         elif name == 'gin':
             mlp1 = Sequential(
@@ -197,11 +198,22 @@ class GNNModelDGL(torch.nn.Module):
             h = self.l1(graph, h)
             h = self.l2(graph, h)
             logits = self.lin2(h)
-        elif self.name in ['gcn', 'cheb', 'sage', 'gin']:
+        elif self.name in ['gcn', 'cheb', 'gin']:
             h = self.drop(h)
             h = self.l1(graph, h)
             h = F.relu(h)
             logits = self.l2(graph, h)
+        elif self.name in ['sage']:
+            h = self.drop(h)
+            h = self.l1(graph, h)
+            h = F.relu(h)
+        
+            h = self.drop(h)
+            h = self.l2(graph, h)
+            h = F.relu(h)
+        
+            logits = self.l3(graph, h)
+            
             
         return logits
 
