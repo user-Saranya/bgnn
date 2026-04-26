@@ -99,8 +99,11 @@ class BaseModel(torch.nn.Module):
         with torch.no_grad():
             pred = logits.squeeze(-1)[mask]
             if self.task == 'regression':
-                metrics['loss'] = torch.sqrt(F.mse_loss(pred, y).squeeze() + 1e-8)
-                metrics['rmsle'] = torch.sqrt(F.mse_loss(torch.log(pred + 1), torch.log(y + 1)).squeeze() + 1e-8)
+                pred_safe = torch.clamp(pred, min=0)
+                y_safe = torch.clamp(y, min=0)
+            
+                metrics['loss'] = torch.sqrt(F.mse_loss(pred, y) + 1e-8)
+                metrics['rmsle'] = torch.sqrt(F.mse_loss(torch.log(pred_safe + 1), torch.log(y_safe + 1)) + 1e-8)
                 metrics['mae'] = F.l1_loss(pred, y)
                 metrics['r2'] = torch.Tensor([r2_score(y.cpu().numpy(), pred.cpu().numpy())])
             elif self.task == 'classification':
@@ -123,7 +126,8 @@ class BaseModel(torch.nn.Module):
             loss = self.train_model(model_in, target_labels, train_mask, optimizer)
 
         self.model.eval()
-        logits = self.model(*model_in).squeeze()
+        logits = self.model(*model_in)
+        logits = logits.squeeze(-1)
         train_results = self.evaluate_model(logits, target_labels, train_mask)
         val_results = self.evaluate_model(logits, target_labels, val_mask)
         test_results = self.evaluate_model(logits, target_labels, test_mask)
