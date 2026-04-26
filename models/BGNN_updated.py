@@ -2,6 +2,7 @@ import time
 import numpy as np
 import torch
 import torch.nn.functional as F
+import torch.nn as nn
 
 from .gnn_graphSAGE import GNNModelDGL, GATDGL
 from .Base import BaseModel
@@ -29,6 +30,7 @@ class BGNN_NDT(BaseModel):
         self.dropout = dropout
         self.name = name
         self.use_leaderboard = use_leaderboard
+        self.norm = None
 
         self.num_trees = num_trees
         self.tree_depth = tree_depth
@@ -66,7 +68,16 @@ class BGNN_NDT(BaseModel):
     # ---------------- Forward ---------------- #
     def forward(self, graph, x):
         x_ndt = self.ndt(x)
+
+        # normalization
+        x_ndt = self.norm(x_ndt)
+    
+        # residual connection 
+        x = x + x_ndt
+    
+        # concatenation
         x_combined = torch.cat([x, x_ndt], dim=1)
+    
         out = self.model(graph, x_combined)
         return out
 
@@ -114,6 +125,7 @@ class BGNN_NDT(BaseModel):
         # -------- Convert to torch -------- #
         x = torch.from_numpy(encoded_X.to_numpy()).float().to(self.device)
         self.raw_input_dim = x.shape[1]
+        self.norm = nn.LayerNorm(self.raw_input_dim).to(self.device)
         self.in_dim = 2 * self.raw_input_dim
 
         y, = self.pandas_to_torch(y)
