@@ -77,7 +77,8 @@ class BaseModel(torch.nn.Module):
         y = target_labels[train_mask]
 
         self.model.train()
-        logits = self.model(*model_in).squeeze()
+        logits = self.model(*model_in)
+        logits = logits.squeeze(-1)
         pred = logits[train_mask]
 
         if self.task == 'regression':
@@ -96,7 +97,7 @@ class BaseModel(torch.nn.Module):
         metrics = {}
         y = target_labels[mask]
         with torch.no_grad():
-            pred = logits[mask]
+            pred = logits.squeeze(-1)[mask]
             if self.task == 'regression':
                 metrics['loss'] = torch.sqrt(F.mse_loss(pred, y).squeeze() + 1e-8)
                 metrics['rmsle'] = torch.sqrt(F.mse_loss(torch.log(pred + 1), torch.log(y + 1)).squeeze() + 1e-8)
