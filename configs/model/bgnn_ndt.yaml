@@ -1,7 +1,7 @@
 hp:
   lr:
-    - 0.001
     - 0.01
+    - 0.05
   hidden_dim:
     - 64
     - 128
@@ -12,10 +12,10 @@ hp:
     - 0.0
     - 0.5
   num_trees:
-    - 3
     - 5
+    - 10
   tree_depth:
-    - 3
     - 5
+    - 7
 num_epochs: 200
 patience: 20
