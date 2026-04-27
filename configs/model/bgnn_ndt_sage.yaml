@@ -1,0 +1,20 @@
+hp:
+  lr:
+    - 0.01
+    - 0.05
+  hidden_dim:
+    - 64
+    - 128
+  name:
+    - sage
+  dropout:
+    - 0.0
+    - 0.1
+  num_trees:
+    - 5
+    - 10
+  tree_depth:
+    - 5
+    - 7
+num_epochs: 200
+patience: 20
