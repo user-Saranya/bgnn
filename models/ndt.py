@@ -1,25 +1,24 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 
 class NeuralDecisionTree(nn.Module):
     def __init__(self, input_dim, output_dim, depth=3):
         super().__init__()
+
         self.depth = depth
         self.input_dim = input_dim
         self.output_dim = output_dim
 
-        # Number of internal nodes and leaves
         self.num_internal = 2 ** depth - 1
         self.num_leaves = 2 ** depth
 
-        # Internal node parameters (routing)
+        # Decision nodes
         self.decision = nn.Linear(input_dim, self.num_internal)
 
-        # Leaf node values
+        # Leaf values
         self.leaf_values = nn.Parameter(
-            torch.randn(self.num_leaves, output_dim)
+            torch.randn(self.num_leaves, output_dim) * 0.1  # scaled init for stability
         )
 
     def forward(self, x):
@@ -30,36 +29,34 @@ class NeuralDecisionTree(nn.Module):
 
         batch_size = x.size(0)
 
-        # Compute decision probabilities
-        decision_logits = self.decision(x)  # [N, num_internal]
-        decision_probs = torch.sigmoid(decision_logits)
+        decision_probs = torch.sigmoid(self.decision(x))  # [N, num_internal]
 
-        # Compute path probabilities to each leaf
         mu = x.new_ones(batch_size, 1)
 
-        begin = 0
-        end = 1
+        idx = 0  # correct index tracker
 
         for d in range(self.depth):
-            nodes = decision_probs[:, begin:end]  # [N, 2^d]
+            nodes = decision_probs[:, idx: idx + 2 ** d]  # correct slicing
+            idx += 2 ** d
 
-            mu = mu.unsqueeze(-1)  # [N, 2^d, 1]
+            mu = mu.unsqueeze(-1)  # [N, current_leaves, 1]
 
-            # Left and right probabilities
-            mu = torch.cat([mu * nodes.unsqueeze(-1),
-                            mu * (1 - nodes.unsqueeze(-1))], dim=-1)
+            mu = torch.cat([
+                mu * nodes.unsqueeze(-1),          # left
+                mu * (1 - nodes.unsqueeze(-1))     # right
+            ], dim=-1)
 
             mu = mu.view(batch_size, -1)
 
-            begin = end
-            end = begin + 2 ** (d + 1)
-
         # mu: [N, num_leaves]
 
-        # Weighted sum of leaf values
-        out = torch.matmul(mu, self.leaf_values)  # [N, output_dim]
+        # Normalize (important for numerical stability)
+        mu = mu / (mu.sum(dim=1, keepdim=True) + 1e-8)
+
+        out = torch.matmul(mu, self.leaf_values)
 
         return out
+
 
 class NeuralDecisionForest(nn.Module):
     def __init__(self, input_dim, output_dim, num_trees=5, depth=3):
