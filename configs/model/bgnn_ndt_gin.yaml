@@ -17,5 +17,5 @@ hp:
   tree_depth:
     - 5
     - 7
-num_epochs: 200
+num_epochs: 350
 patience: 20
