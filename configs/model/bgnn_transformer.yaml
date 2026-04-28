@@ -1,8 +1,8 @@
 hp:
-  lr: [0.005, 0.01]
+  lr: [0.001, 0.003]
 
   hidden_dim: [64, 128]
-  dropout: [0.1, 0.2]
+  dropout: [0.2, 0.3]
 
   num_heads: [4, 8]
   num_layers: [2, 3]
