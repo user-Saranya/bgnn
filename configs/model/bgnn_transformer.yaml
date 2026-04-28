@@ -10,7 +10,7 @@ hp:
   num_trees: [5, 10]
   tree_depth: [3, 4]
 
-  alpha: [0.1, 0.2, 0.3]
+  alpha: [0.05, 0.1, 0.2]
 
 num_epochs: 500
 patience: 50
